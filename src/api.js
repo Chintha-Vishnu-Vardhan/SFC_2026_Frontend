@@ -5,7 +5,7 @@ console.log("API URL:", import.meta.env.VITE_API_URL);
 
 // Create an axios instance with a base URL from environment variables
 const api = axios.create({
-  baseURL:  'https://api.coupons.shaastra.org' // Fallback for safety
+  baseURL:  'http://localhost:5000' // Fallback for safety
   // baseURL:'http://localhost:5000/'
 });
 

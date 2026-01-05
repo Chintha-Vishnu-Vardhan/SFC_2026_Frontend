@@ -205,7 +205,7 @@ const DashboardPage = () => {
         console.log(`🔌 Initializing Socket for ${user.userId}...`);
 
         // 2. Setup Socket - ✅ POINTING TO PRODUCTION URL
-        const newSocket = io("https://api.coupons.shaastra.org", {
+        const newSocket = io("http://localhost:5000", {
             transports: ['polling', 'websocket'],
             withCredentials: true,
             autoConnect: false
