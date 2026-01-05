@@ -28,6 +28,7 @@ import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import TransactionStatus from './TransactionStatus';
 import ResetBalancesModal from './ResetBalancesModal';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 // Responsive Modal Style
 const modalStyle = {
@@ -53,6 +54,10 @@ const DashboardPage = () => {
     const [message, setMessage] = useState('');
     const [messageType, setMessageType] = useState('info');
     const [idModalOpen, setIdModalOpen] = useState(false);
+    const [csvModalOpen, setCsvModalOpen] = useState(false);
+    const [csvRecipients, setCsvRecipients] = useState([]);
+    const [csvSummary, setCsvSummary] = useState({ totalAmount: 0, count: 0 });
+    const [csvFile, setCsvFile] = useState(null);
 
     // ✅ NEW: Local state for Real-time Balance
     const [currentBalance, setCurrentBalance] = useState(0);
@@ -166,6 +171,87 @@ const DashboardPage = () => {
         );
         fetchHistory();
         setTimeout(() => window.location.reload(), 2000);
+    };
+    const handleCsvModalOpen = () => setCsvModalOpen(true);
+    const handleCsvModalClose = () => {
+        setCsvModalOpen(false);
+        setCsvRecipients([]);
+        setCsvSummary({ totalAmount: 0, count: 0 });
+        setCsvFile(null);
+        setMessage('');
+    };
+
+    const handleCsvUpload = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        setCsvFile(file);
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const text = e.target.result;
+                const lines = text.split(/\r\n|\n/);
+                const parsed = [];
+                let total = 0;
+                
+                // Parse CSV (Expected format: UserId, Amount)
+                lines.forEach((line, index) => {
+                    if (!line.trim()) return;
+                    const parts = line.split(',');
+                    if (parts.length < 2) return;
+                    
+                    const userId = parts[0].trim();
+                    const amountStr = parts[1].trim();
+                    
+                    // Skip header row if it exists
+                    if (index === 0 && userId.toLowerCase().includes('user') && isNaN(amountStr)) return;
+                    
+                    const amount = parseFloat(amountStr);
+                    if (userId && !isNaN(amount) && amount > 0) {
+                        parsed.push({ userId, amount });
+                        total += amount;
+                    }
+                });
+
+                if (parsed.length === 0) {
+                    setMessage('No valid rows found in CSV. Format: UserId, Amount');
+                    setMessageType('error');
+                    return;
+                }
+
+                setCsvRecipients(parsed);
+                setCsvSummary({ totalAmount: total, count: parsed.length });
+                setMessage('');
+                setMessageType('info');
+
+            } catch (err) {
+                console.error(err);
+                setMessage('Error parsing CSV file.');
+                setMessageType('error');
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    const handleSendBulkCsv = async (e) => {
+        e.preventDefault();
+        setMessage('');
+        
+        if (csvRecipients.length === 0) {
+             setMessage('Please upload a valid CSV first.');
+             setMessageType('error');
+             return;
+        }
+
+        // Set pending transaction for the Confirmation Modal
+        setPendingTransaction({ 
+            type: 'bulk_csv', 
+            payload: { recipients: csvRecipients, totalAmount: csvSummary.totalAmount, count: csvSummary.count } 
+        });
+        setSPin('');
+        setTransactionStatus('input');
+        setIsPinModalOpen(true);
+        handleCsvModalClose();
     };
 
     const fetchHistory = useCallback(async () => {
@@ -561,6 +647,12 @@ const DashboardPage = () => {
             apiEndpoint = '/api/wallet/send-group';
             apiPayload = { ...pendingTransaction.payload, sPin };
         }
+        if (pendingTransaction.type === 'send') {
+            // ...
+        } else if (pendingTransaction.type === 'bulk_csv') {
+            apiEndpoint = '/api/wallet/send-bulk-csv';
+            apiPayload = { recipients: pendingTransaction.payload.recipients, sPin };
+        }
 
         try {
             const start = Date.now();
@@ -639,7 +731,14 @@ const DashboardPage = () => {
                     <Grid size={{ xs: 6, sm: 4 }}>
                         <Button variant="contained" color="warning" startIcon={<Warning />} onClick={handleResetModalOpen} fullWidth>Reset Balances</Button>
                     </Grid>
-                )}                
+                )}  
+                {((user.department === 'Finance') && user.role === 'Core') && (
+                    <Grid size={{ xs: 6, sm: 4 }}>
+                        <Button variant="contained" color="secondary" startIcon={<CloudUploadIcon />} onClick={handleCsvModalOpen} fullWidth>
+                            Bulk Send (CSV)
+                        </Button>
+                    </Grid>
+                )}              
             </Grid>
 
             {/* Recent Transactions */}
@@ -915,6 +1014,36 @@ const DashboardPage = () => {
                                                 </Box>
                                     </>
                                 )}
+                                {/* ... existing send/topup views ... */}
+
+                                {pendingTransaction.type === 'bulk_csv' && (
+                                    <>
+                                        <Box sx={{ p: 2, bgcolor: 'warning.light', color: 'warning.contrastText', borderRadius: 1, mb: 2 }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Warning fontSize="small" /> WARNING
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                You are about to send <b>₹{pendingTransaction.payload.totalAmount.toFixed(2)}</b> to <b>{pendingTransaction.payload.count}</b> users.
+                                            </Typography>
+                                        </Box>
+
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', my: 1 }}>
+                                            <Typography color="text.secondary">Total Amount:</Typography>
+                                            <Typography fontWeight="600" color="text.primary">₹{pendingTransaction.payload.totalAmount.toFixed(2)}</Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', my: 1 }}>
+                                            <Typography color="text.secondary">Your Balance:</Typography>
+                                            <Typography fontWeight="600" color="text.primary">₹{user.balance.toFixed(2)}</Typography>
+                                        </Box>
+                                        <Divider sx={{ my: 1 }} />
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', my: 1 }}>
+                                            <Typography color="text.secondary" fontWeight="600">Balance After:</Typography>
+                                            <Typography fontWeight="700" color={(user.balance - pendingTransaction.payload.totalAmount) < 0 ? 'error.main' : 'success.main'}>
+                                                ₹{(user.balance - pendingTransaction.payload.totalAmount).toFixed(2)}
+                                            </Typography>
+                                        </Box>
+                                    </>
+                                )}
 
                                 {pendingTransaction.type === 'group' && (
                                     <>
@@ -940,6 +1069,7 @@ const DashboardPage = () => {
                             </Box>
                         )}
 
+
                             <Typography variant="h6" component="h2" gutterBottom>Enter S-Pin to Confirm</Typography>
                             <Box component="form" onSubmit={handleConfirmTransaction}>
                                 <TextField
@@ -964,9 +1094,58 @@ const DashboardPage = () => {
                     )}
                 </Box>
             </Modal>
+            {/* CSV Bulk Send Modal */}
+            <Modal open={csvModalOpen} onClose={handleCsvModalClose}>
+                <Box sx={modalStyle}>
+                    <Typography variant="h6" gutterBottom>Bulk Send via CSV</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Upload a CSV with format: <b>UserId, Amount</b>
+                    </Typography>
+                    
+                    <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<CloudUploadIcon />}
+                        fullWidth
+                        sx={{ mb: 2 }}
+                    >
+                        Upload File
+                        <input type="file" hidden accept=".csv" onChange={handleCsvUpload} />
+                    </Button>
+                    
+                    {csvFile && <Typography variant="caption" display="block" sx={{ mb: 2 }}>Selected: {csvFile.name}</Typography>}
+                    
+                    {csvRecipients.length > 0 && (
+                        <Paper sx={{ p: 2, bgcolor: 'background.default', mb: 2 }}>
+                            <Typography variant="subtitle2">Summary:</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                                <Typography>Total Users:</Typography>
+                                <Typography fontWeight="bold">{csvSummary.count}</Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Typography>Total Amount:</Typography>
+                                <Typography fontWeight="bold" color="primary">₹{csvSummary.totalAmount.toFixed(2)}</Typography>
+                            </Box>
+                        </Paper>
+                    )}
+
+                    {csvRecipients.length > 0 && (
+                         <Button variant="contained" color="primary" fullWidth onClick={handleSendBulkCsv}>
+                            Proceed to Verify
+                         </Button>
+                    )}
+                    
+                    {message && (
+                        <Typography sx={{ mt: 2, color: messageType === 'error' ? 'error.main' : 'text.secondary' }}>
+                            {message}
+                        </Typography>
+                    )}
+                </Box>
+            </Modal>
 
             <Button variant="outlined" color="error" onClick={handleLogout} sx={{ mt: 4 }} fullWidth>Logout</Button>
             <ResetBalancesModal open={resetModalOpen} onClose={handleResetModalClose} onSuccess={handleResetSuccess} />
+
         </Container>
     );
 };
