@@ -686,11 +686,19 @@ const DashboardPage = () => {
     if (!user) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></Box>;
 
     return (
-        <Container maxWidth="sm" sx={{ mt: 4, pb: 4 }}>
+        <Container maxWidth="md" sx={{ mt: { xs: 2, sm: 4 }, pb: 4 }}>
             <PageTitle />
             
             {/* Balance Card */}
-            <Card sx={{ p: 3, mb: 4, backgroundColor: '#6da9d2ff', color: 'white', borderRadius: 4 }}>
+            <Card
+                sx={{
+                    p: { xs: 2.5, sm: 3 },
+                    mb: 4,
+                    background: 'linear-gradient(135deg, #1e5da6 0%, #4d95df 100%)',
+                    color: 'white',
+                    borderRadius: 4,
+                }}
+            >
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
                         {user.rollNumber || user.userId || 'Not Available'}
@@ -705,41 +713,43 @@ const DashboardPage = () => {
             </Card>
 
             {/* Quick Actions */}
-            <Typography variant="h6" align="left" gutterBottom sx={{ mb: 2 }}>Quick Actions</Typography>
-            <Grid container spacing={2} sx={{ mb: 4 }}>
-                <Grid size={{ xs: 6, sm: 4 }}><Button variant="contained" startIcon={<SendIcon />} onClick={handleOpen} fullWidth>Send</Button></Grid>
-                <Grid size={{ xs: 6, sm: 4 }}><Button variant="outlined" startIcon={<ArrowDownwardIcon />} onClick={handleReceiveOpen} fullWidth>Receive</Button></Grid>
-                <Grid size={{ xs: 6, sm: 4 }}><Button component={Link} to="/history" variant="outlined" startIcon={<HistoryIcon />} fullWidth>History</Button></Grid>
+            <Card sx={{ p: { xs: 2, sm: 3 }, mb: 4, borderRadius: 4 }}>
+            <Typography variant="h6" align="left" gutterBottom sx={{ mb: 2, fontWeight: 700 }}>Quick Actions</Typography>
+            <Grid container spacing={1.5} sx={{ mb: 0.5 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}><Button variant="contained" startIcon={<SendIcon />} onClick={handleOpen} fullWidth>Send</Button></Grid>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}><Button variant="outlined" startIcon={<ArrowDownwardIcon />} onClick={handleReceiveOpen} fullWidth>Receive</Button></Grid>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}><Button component={Link} to="/history" variant="outlined" startIcon={<HistoryIcon />} fullWidth>History</Button></Grid>
                 {((user.department === 'Finance' || user.department === 'WebOps') && user.role === 'Core') && (
-                      <Grid size={{ xs: 6, sm: 4 }}><Button variant="contained" color="success" startIcon={<AddCardIcon />} onClick={handleTopUpOpen} fullWidth>Top Up</Button></Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }}><Button variant="contained" color="success" startIcon={<AddCardIcon />} onClick={handleTopUpOpen} fullWidth>Top Up</Button></Grid>
                 )}
                 {/* MODIFICATION 6: SEND TO ALL CORES BUTTON */}
                 {((user.department === 'Finance' || user.department === 'WebOps') && user.role === 'Core') && (
-                    <Grid size={{ xs: 6, sm: 4 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Button variant="contained" color="primary" startIcon={<GroupAddIcon />} onClick={handleCoresOpen} fullWidth>
                             Send to All Cores
                         </Button>
                     </Grid>
                 )}
                  {(user.role === 'Core' || user.role === 'Finance Core') && user.department && (
-                      <Grid size={{ xs: 6, sm: 4 }}><Button variant="contained" color="secondary" startIcon={<GroupAddIcon />} onClick={handleGroupOpen} fullWidth>Send to Dept Team</Button></Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }}><Button variant="contained" color="secondary" startIcon={<GroupAddIcon />} onClick={handleGroupOpen} fullWidth>Send to Dept Team</Button></Grid>
                  )}
                  {((user.department === 'Finance' || user.department === 'WebOps') && user.role === 'Core') && (
-                      <Grid size={{ xs: 6, sm: 4 }}><Button component={Link} to="/vendor-management" variant="outlined" startIcon={<ReceiptIcon />} fullWidth>Vendor Management</Button></Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }}><Button component={Link} to="/vendor-management" variant="outlined" startIcon={<ReceiptIcon />} fullWidth>Vendor Management</Button></Grid>
                  )}
                 {((user.department === 'Finance' || user.department === 'WebOps') && user.role === 'Core') && (
-                    <Grid size={{ xs: 6, sm: 4 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Button variant="contained" color="warning" startIcon={<Warning />} onClick={handleResetModalOpen} fullWidth>Reset Balances</Button>
                     </Grid>
                 )}  
                 {((user.department === 'Finance') && user.role === 'Core') && (
-                    <Grid size={{ xs: 6, sm: 4 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Button variant="contained" color="secondary" startIcon={<CloudUploadIcon />} onClick={handleCsvModalOpen} fullWidth>
                             Bulk Send (CSV)
                         </Button>
                     </Grid>
                 )}              
             </Grid>
+            </Card>
 
             {/* Recent Transactions */}
             <Typography variant="h6" align="left" gutterBottom sx={{ mt: 4 }}>Recent Transactions</Typography>

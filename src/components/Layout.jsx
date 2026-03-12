@@ -1,11 +1,10 @@
-// src/components/Layout.js
 import React, { useContext, useState } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Box, 
-  IconButton, 
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Box,
+  IconButton,
   Drawer,
   List,
   ListItem,
@@ -15,7 +14,8 @@ import {
   Avatar,
   Menu,
   MenuItem,
-  Divider
+  Divider,
+  Chip
 } from '@mui/material';
 import { Outlet, Link as RouterLink, useLocation } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
@@ -27,13 +27,10 @@ import {
   History,
   Person,
   Logout,
-  Receipt,
-  Settings
+  Receipt
 } from '@mui/icons-material';
-// RIGHT ✅
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
-
 
 const drawerWidth = 280;
 
@@ -42,13 +39,13 @@ const Layout = () => {
   const colorMode = useContext(ColorModeContext);
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
-  
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    setMobileOpen((prev) => !prev);
   };
 
   const handleProfileMenuOpen = (event) => {
@@ -68,62 +65,98 @@ const Layout = () => {
     { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
     { text: 'Transaction History', icon: <History />, path: '/history' },
     { text: 'Profile', icon: <Person />, path: '/profile' },
-    ...(user && user.department === 'Finance' && user.role === 'Core' ? [{ text: 'Vendor Management', icon: <Receipt />, path: '/vendor-management' }]: [])
+    ...(user && user.department === 'Finance' && user.role === 'Core'
+      ? [{ text: 'Vendor Management', icon: <Receipt />, path: '/vendor-management' }]
+      : []),
   ];
 
   const drawer = (
-    // src/components/Layout.jsx
-    // ✅ FIX: Dynamic logo based on theme (black/white PNGs)
-
-    // In the drawer logo section, replace the Box component with:
-
-    <Box sx={{ 
-      p: 4, 
-      textAlign: 'center', 
-      borderBottom: 1, 
-      borderColor: 'divider', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center' 
-    }}>
-      {/* ✅ THEME-AWARE LOGO SWITCHING */}
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box
-        component="img"
-        src={theme.palette.mode === 'light' 
-          ? "/Shaastra_2026_logo_black.png"  // ← Your black PNG for light mode
-          : "/Shaastra_2026_logo_white.png"  // ← Your white PNG for dark mode
-        }
-        alt="Shaastra Logo"
-        sx={{ 
-          height: { xs: 72, sm: 56, md: 44 }, 
-          mb: 1,
-          transition: 'opacity 0.3s ease',
-          '&:hover': {
-            opacity: 0.8
-          }
+        sx={{
+          p: 3,
+          textAlign: 'center',
+          borderBottom: 1,
+          borderColor: 'divider',
+          background:
+            theme.palette.mode === 'light'
+              ? 'linear-gradient(180deg, rgba(25,118,210,0.08), rgba(255,255,255,0))'
+              : 'linear-gradient(180deg, rgba(144,202,249,0.16), rgba(0,0,0,0))',
         }}
-      />
-      <Typography variant="h6" sx={{ 
-        fontWeight: 700, 
-        color: 'primary.main', 
-        fontSize: { xs: '1.05rem', sm: '0.95rem' } 
-      }}>
-        Shaastra Wallet
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ 
-        fontSize: { xs: '0.85rem', sm: '0.8rem' } 
-      }}>
-        Virtual Food Coupons
-      </Typography>
+      >
+        <Box
+          component="img"
+          src={theme.palette.mode === 'light' ? '/Shaastra_2026_logo_black.png' : '/Shaastra_2026_logo_white.png'}
+          alt="Shaastra Logo"
+          sx={{ height: { xs: 58, sm: 52, md: 46 }, mb: 1.5 }}
+        />
+        <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main' }}>
+          Shaastra Wallet
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Virtual Food Coupons
+        </Typography>
+      </Box>
+
+      <Box sx={{ px: 2, py: 2 }}>
+        <List disablePadding>
+          {navigationItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
+                <ListItemButton
+                  component={RouterLink}
+                  to={item.path}
+                  selected={isActive}
+                  onClick={() => setMobileOpen(false)}
+                  sx={{
+                    borderRadius: 2,
+                    py: 1.1,
+                    '&.Mui-selected': {
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
+                      '& .MuiListItemIcon-root': { color: 'primary.contrastText' },
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 38, color: isActive ? 'inherit' : 'text.secondary' }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.text}
+                    primaryTypographyProps={{ fontWeight: isActive ? 700 : 500 }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+        </List>
+      </Box>
+
+      <Box sx={{ mt: 'auto', p: 2 }}>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            bgcolor: 'background.default',
+            border: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+            {user?.name || 'User'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {user?.userId || 'ID unavailable'}
+          </Typography>
+          {!!user?.role && <Chip label={`${user.role}${user?.department ? ` • ${user.department}` : ''}`} size="small" sx={{ mt: 1, maxWidth: '100%' }} />}
+        </Box>
+      </Box>
     </Box>
-
-
   );
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      {/* App Bar */}
       <AppBar
         position="fixed"
         sx={{
@@ -142,35 +175,31 @@ const Layout = () => {
           >
             <MenuIcon />
           </IconButton>
-          
-          <Box sx={{ position: 'relative', width: '100%',textAlign: 'center' }}>
+
+          <Box sx={{ flexGrow: 1, textAlign: { xs: 'left', sm: 'center' }, pl: { xs: 0.5, sm: 0 } }}>
             <Typography
               variant="h6"
               noWrap
               component="div"
               sx={{
                 color: theme.palette.mode === 'light' ? theme.palette.text.primary : 'inherit',
-                fontWeight: 500,
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' }
+                fontWeight: 600,
+                fontSize: { xs: '1rem', sm: '1.2rem', md: '1.4rem' },
               }}
             >
-              {navigationItems.find(item => item.path === location.pathname)?.text || 'Shaastra Wallet'}
+              {navigationItems.find((item) => item.path === location.pathname)?.text || 'Shaastra Wallet'}
             </Typography>
           </Box>
-          {/* --- ADD THEME TOGGLE BUTTON HERE --- */}
-          <IconButton 
-            sx={{ ml: 1 }} 
-            onClick={colorMode.toggleColorMode} 
+
+          <IconButton
+            sx={{ ml: 1 }}
+            onClick={colorMode.toggleColorMode}
             color={theme.palette.mode === 'light' ? 'primary' : 'inherit'}
             aria-label="toggle theme"
           >
             {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
-          {/* --- END ADDITION --- */}
-          {/* notifications removed (unused) */}
 
-          {/* Profile Menu */}
           {isAuthenticated && (
             <IconButton
               size="large"
@@ -181,7 +210,7 @@ const Layout = () => {
               onClick={handleProfileMenuOpen}
               color="inherit"
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
+              <Avatar sx={{ width: 34, height: 34, bgcolor: 'secondary.main' }}>
                 {user?.name?.charAt(0)?.toUpperCase()}
               </Avatar>
             </IconButton>
@@ -189,7 +218,6 @@ const Layout = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Profile Menu */}
       <Menu
         anchorEl={anchorEl}
         id="account-menu"
@@ -200,14 +228,8 @@ const Layout = () => {
           elevation: 0,
           sx: {
             overflow: 'visible',
-            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.2))',
             mt: 1.5,
-            '& .MuiAvatar-root': {
-              width: 32,
-              height: 32,
-              ml: -0.5,
-              mr: 1,
-            },
             '&:before': {
               content: '""',
               display: 'block',
@@ -231,12 +253,6 @@ const Layout = () => {
           </ListItemIcon>
           Profile
         </MenuItem>
-        {/* <MenuItem onClick={handleProfileMenuClose}>
-          <ListItemIcon>
-            <Settings fontSize="small" />
-          </ListItemIcon>
-          Settings
-        </MenuItem> */}
         <Divider />
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>
@@ -246,25 +262,17 @@ const Layout = () => {
         </MenuItem>
       </Menu>
 
-      {/* Drawer */}
-      <Box
-        component="nav"
-        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
-        aria-label="mailbox folders"
-      >
-        {/* Mobile drawer */}
+      <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }} aria-label="app navigation">
         <Drawer
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
+          ModalProps={{ keepMounted: true }}
           PaperProps={{
             sx: {
-              // push the temporary drawer content below the fixed AppBar on small screens
               top: { xs: '64px', sm: '64px' },
-            }
+              height: 'calc(100% - 64px)',
+            },
           }}
           sx={{
             display: { xs: 'block', md: 'none' },
@@ -273,8 +281,7 @@ const Layout = () => {
         >
           {drawer}
         </Drawer>
-        
-        {/* Desktop drawer */}
+
         <Drawer
           variant="permanent"
           sx={{
@@ -287,12 +294,12 @@ const Layout = () => {
         </Drawer>
       </Box>
 
-      {/* Main content */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          px: { xs: 2, sm: 3 },
+          py: { xs: 2, sm: 3 },
           width: { md: `calc(100% - ${drawerWidth}px)` },
           mt: 8,
           backgroundColor: 'background.default',
