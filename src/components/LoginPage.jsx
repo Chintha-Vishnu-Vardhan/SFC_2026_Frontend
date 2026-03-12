@@ -1,4 +1,3 @@
-// src/components/LoginPage.js
 import React, { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
@@ -9,11 +8,12 @@ import {
     Button,
     Box,
     Link,
-    IconButton, // --- 1. NEW IMPORT ---
-    InputAdornment // --- 2. NEW IMPORT ---
+    IconButton,
+    InputAdornment,
+    Stack,
 } from '@mui/material';
-import Visibility from '@mui/icons-material/Visibility'; // --- 3. NEW IMPORT ---
-import VisibilityOff from '@mui/icons-material/VisibilityOff'; // --- 4. NEW IMPORT ---
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
@@ -23,34 +23,37 @@ const LoginPage = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    // --- 5. NEW STATE AND HANDLERS ---
     const [showPassword, setShowPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
     };
-    // --- END NEW ---
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setError(''); 
+        setError('');
         try {
             const normalizedUserId = userId.trim().toUpperCase();
             await login(normalizedUserId, password);
             navigate('/dashboard');
-
         } catch (errorMessage) {
-            console.error("LoginPage: login error caught:", errorMessage); 
+            console.error('LoginPage: login error caught:', errorMessage);
             setError(errorMessage || 'Login failed. Please check credentials.');
         }
     };
 
     return (
-        <Container component="main" maxWidth="xs" sx={{ mt: 8 }}>
-            <Card sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', borderRadius: 2 }}>
-                <Typography component="h1" variant="h5">
-                    Shaastra Wallet Login
-                </Typography>
+        <Container component="main" maxWidth="sm" sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', py: 4 }}>
+            <Card sx={{ p: { xs: 3, sm: 4 }, width: '100%', maxWidth: 520, borderRadius: 4 }}>
+                <Stack spacing={0.5} sx={{ mb: 2 }}>
+                    <Typography component="h1" variant="h4" sx={{ fontWeight: 800 }}>
+                        Welcome back 👋
+                    </Typography>
+                    <Typography color="text.secondary">
+                        Sign in to access your Shaastra Wallet and manage your virtual coupons.
+                    </Typography>
+                </Stack>
+
                 <Box component="form" onSubmit={handleLogin} sx={{ mt: 1 }}>
                     <TextField
                         margin="normal"
@@ -65,57 +68,50 @@ const LoginPage = () => {
                         onChange={(e) => setUserId(e.target.value)}
                     />
                     <TextField
-                        // --- 6. MODIFIED TEXTFIELD ---
                         margin="normal"
                         required
                         fullWidth
                         name="password"
                         label="Password"
-                        type={showPassword ? 'text' : 'password'} // Toggle type
+                        type={showPassword ? 'text' : 'password'}
                         id="password"
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                aria-label="toggle password visibility"
-                                onClick={handleClickShowPassword}
-                                onMouseDown={handleMouseDownPassword}
-                                edge="end"
-                              >
-                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        aria-label="toggle password visibility"
+                                        onClick={handleClickShowPassword}
+                                        onMouseDown={handleMouseDownPassword}
+                                        edge="end"
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            ),
                         }}
-                        // --- END MODIFICATION ---
                     />
 
                     {error && (
-                        <Typography color="error" align="center" variant="body2" sx={{ mt: 2 }}>
+                        <Typography color="error" align="left" variant="body2" sx={{ mt: 1.5 }}>
                             {error}
                         </Typography>
                     )}
 
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
-                    >
+                    <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 1.5, py: 1.2 }}>
                         Login
                     </Button>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1.5}>
                         <Link component={RouterLink} to="/forgot-password" variant="body2">
                             Forgot Password?
                         </Link>
                         <Link component={RouterLink} to="/register" variant="body2">
-                            {"Don't have an account? Register"}
+                            Don&apos;t have an account? Register
                         </Link>
-                    </Box>
+                    </Stack>
                 </Box>
             </Card>
         </Container>
